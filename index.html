@@ -1,0 +1,170 @@
+<!DOCTYPE html><html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Finanças</title>  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+    }
+
+    button {
+      background: #22c55e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .income { color: #22c55e; }
+    .expense { color: #ef4444; }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .summary div {
+      flex: 1;
+      text-align: center;
+      background: #334155;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .transaction {
+      display: flex;
+      justify-content: space-between;
+      background: #1e293b;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .delete {
+      background: #ef4444;
+      margin-top: 5px;
+    }
+  </style></head>
+<body>  <h1>💰 Minhas Finanças</h1>  <div class="card">
+    <input type="text" id="desc" placeholder="Descrição">
+    <input type="number" id="amount" placeholder="Valor"><select id="type">
+  <option value="income">Entrada</option>
+  <option value="expense">Saída</option>
+</select>
+
+<button onclick="addTransaction()">Adicionar</button>
+
+  </div>  <div class="summary">
+    <div>
+      <p>Entradas</p>
+      <strong id="totalIncome">R$ 0.00</strong>
+    </div><div>
+  <p>Saídas</p>
+  <strong id="totalExpense">R$ 0.00</strong>
+</div>
+
+<div>
+  <p>Saldo</p>
+  <strong id="balance">R$ 0.00</strong>
+</div>
+
+  </div>  <div id="list"></div>  <script>
+    let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+
+    function save() {
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+    }
+
+    function addTransaction() {
+      const desc = document.getElementById("desc").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const type = document.getElementById("type").value;
+
+      if (!desc || !amount) return;
+
+      transactions.push({
+        id: Date.now(),
+        desc,
+        amount,
+        type
+      });
+
+      save();
+      document.getElementById("desc").value = "";
+      document.getElementById("amount").value = "";
+      render();
+    }
+
+    function removeTransaction(id) {
+      transactions = transactions.filter(t => t.id !== id);
+      save();
+      render();
+    }
+
+    function render() {
+      const list = document.getElementById("list");
+      const totalIncome = transactions
+        .filter(t => t.type === "income")
+        .reduce((acc, t) => acc + t.amount, 0);
+
+      const totalExpense = transactions
+        .filter(t => t.type === "expense")
+        .reduce((acc, t) => acc + t.amount, 0);
+
+      const balance = totalIncome - totalExpense;
+
+      document.getElementById("totalIncome").innerText = "R$ " + totalIncome.toFixed(2);
+      document.getElementById("totalExpense").innerText = "R$ " + totalExpense.toFixed(2);
+      document.getElementById("balance").innerText = "R$ " + balance.toFixed(2);
+
+      list.innerHTML = "";
+
+      transactions.forEach(t => {
+        const div = document.createElement("div");
+        div.classList.add("transaction");
+
+        div.innerHTML = `
+          <span>${t.desc}</span>
+          <span class="${t.type}">
+            ${t.type === "income" ? "+" : "-"} R$ ${t.amount.toFixed(2)}
+          </span>
+          <button class="delete" onclick="removeTransaction(${t.id})">X</button>
+        `;
+
+        list.appendChild(div);
+      });
+    }
+
+    render();
+  </script></body>
+</html>
